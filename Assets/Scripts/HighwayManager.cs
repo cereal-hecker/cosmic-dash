@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class HighwayGenerator : MonoBehaviour
+public class HighwayManager : MonoBehaviour
 {
     public GameObject[] highwayTilePrefab;
     private Transform playerTransform;  
