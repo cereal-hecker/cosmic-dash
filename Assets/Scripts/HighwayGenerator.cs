@@ -3,54 +3,59 @@ using System.Collections.Generic;
 
 public class HighwayGenerator : MonoBehaviour
 {
-    public List<GameObject> highwayPieces;  // List of the individual prefabs for each highway piece
-    public Transform player;               // Reference to the player character
-    public float tileLength = 50f;         // Total length of a single highway tile (ensure it matches the combined prefab length)
-    public int tilesOnScreen = 5;          // Number of tiles to keep on screen at a time
-
-    private float spawnZ = 0;              // Z position to spawn the next tile
-    private List<GameObject> activeTiles = new List<GameObject>(); // Keep track of active tiles
+    public GameObject[] highwayTilePrefab;
+    private Transform playerTransform;  
+    private float spawnZ = 0f;
+    private float tileLength = 50f;
+    private int numberOfTiles = 10;
+    private float safeZone = 60f;
+    private List<GameObject> activeTiles = new List<GameObject>();
 
     void Start()
     {
-        // Start by spawning one initial tile to initialize the endless process
-        SpawnTile(); 
+        playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform;
+
+        if (playerTransform == null)
+        {
+            Debug.LogError("No GameObject with tag 'Player' found!");
+            return;
+        }
+
+        for (int i = 0; i < numberOfTiles; i++)
+        {
+            if (i == 0)
+                SpawnTile(0);
+            else
+                SpawnTile();
+        }
     }
 
     void Update()
     {
-        // Check if the player is far enough to need a new tile
-        if (player.position.z > spawnZ - (tilesOnScreen * tileLength))
+        if (playerTransform.position.z - safeZone > (spawnZ - numberOfTiles * tileLength))
         {
             SpawnTile();
-            DeleteTile(); // Remove the oldest tile
+            DeleteTile();
         }
     }
 
-    void SpawnTile()
+    void SpawnTile(int prefabIndex = -1)
     {
-        // Create a parent object to hold the highway pieces
-        GameObject parentTile = new GameObject("HighwayTile");
-        parentTile.transform.position = new Vector3(0, 0, spawnZ);
+        if (prefabIndex == -1)
+            prefabIndex = Random.Range(0, highwayTilePrefab.Length);
 
-        // Loop through each prefab in the highwayPieces list and instantiate it
-        foreach (GameObject piece in highwayPieces)
-        {
-            GameObject instance = Instantiate(piece, parentTile.transform);
-            instance.transform.localPosition = Vector3.zero; // Align pieces correctly (adjust if needed)
-        }
+        GameObject go = Instantiate(highwayTilePrefab[prefabIndex]) as GameObject;
+        go.transform.SetParent(transform);
+        go.transform.position = new Vector3(0, 0, spawnZ);
+        spawnZ += tileLength;
 
-        // Add the new tile to the active tiles list
-        activeTiles.Add(parentTile);
-        spawnZ += tileLength; // Move the spawn position forward
+        activeTiles.Add(go);
     }
 
     void DeleteTile()
     {
-        // Only delete if there are more tiles than the allowed number
-        if (activeTiles.Count > tilesOnScreen)
+        if (activeTiles.Count > 0 && playerTransform.position.z - safeZone > activeTiles[0].transform.position.z + tileLength)
         {
-            // Destroy the oldest tile
             Destroy(activeTiles[0]);
             activeTiles.RemoveAt(0);
         }
