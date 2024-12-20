@@ -4,6 +4,7 @@ using System.Collections.Generic;
 public class HighwayManager : MonoBehaviour
 {
     public GameObject[] highwayTilePrefab;
+    public ObstacleSpawner obstacleSpawner; // Reference to ObstacleSpawner to trigger obstacle spawning
     private Transform playerTransform;  
     private float spawnZ = 0f;
     private float tileLength = 50f;
@@ -50,6 +51,9 @@ public class HighwayManager : MonoBehaviour
         spawnZ += tileLength;
 
         activeTiles.Add(go);
+
+        // Trigger obstacle spawn for all visible lanes when a new tile is created
+        obstacleSpawner.SpawnObstaclesForAllLanes(go.transform.position.z);
     }
 
     void DeleteTile()
